@@ -10,3 +10,18 @@ bool sat - if the event is scheduled to run on this day.
 bool vibrate- if the phone should vibrate.
 int ring_volume 0-100 - the volume of the ringtone. Ring off if set to 0.
 text title - The title of the event.
+
+When the service starts schedule all the entries in the database and create the notification icon. The function to do all this will only be run on startup.
+	(15, 17, 19)
+
+When an event happens set the ringer to the appropriate volume and reschedule the event. Taken care of by the service.
+	(1, 2, 3, 4, 9, 18)
+
+When an event is deleted cancel the intent that was created for the event. this will be taken care of in the activity.
+	(7, 10)
+
+When an event is created create the intent and register it with the alarm manager, also place an entry in the database. This is taken care of by the activity.
+	(5, 6, 8, 11, 12, 13, 14)
+
+Have the activity display all the current events to the user and allow the user to manage the events. This will be taken care of in the activity.
+	(16)
