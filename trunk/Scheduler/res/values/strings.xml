@@ -2,4 +2,6 @@
 <resources>
     <string name="hello">Hello World, Scheduler!</string>
     <string name="app_name">Scheduler</string>
+    <string name="add_event">add</string>
+    <string name="del_event">delete</string>
 </resources>
