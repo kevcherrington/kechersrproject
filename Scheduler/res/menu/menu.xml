@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+	<item android:id="@+id/add_event"
+		android:icon="@drawable/add_event"
+		android:title="@string/add_event" />
+	<item android:id="@+id/del_event"
+		android:icon="@drawable/del_event"
+		android:title="@string/del_event" />
+</menu>
