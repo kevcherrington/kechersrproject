@@ -1,5 +1,8 @@
-DATETIME last_run - updated when the event is last run or null (00:00:00) if the event hasn't been run yet.
+text title - The title of the event.
 TIME time_to_run - the time the event is scheduled to run.
+DATETIME last_run - updated when the event is last run or null (00:00:00) if the event hasn't been run yet.
+bool vibrate- if the phone should vibrate.
+int ring_volume 0-100 - the volume of the ringtone. Ring off if set to 0.
 bool sun - if the event is scheduled to run on this day.
 bool mon - if the event is scheduled to run on this day.
 bool tues - if the event is scheduled to run on this day.
@@ -7,9 +10,6 @@ bool wed - if the event is scheduled to run on this day.
 bool thur - if the event is scheduled to run on this day.
 bool fri - if the event is scheduled to run on this day.
 bool sat - if the event is scheduled to run on this day.
-bool vibrate- if the phone should vibrate.
-int ring_volume 0-100 - the volume of the ringtone. Ring off if set to 0.
-text title - The title of the event.
 
 When the service starts schedule all the entries in the database and create the notification icon. The function to do all this will only be run on startup.
 	(15, 17, 19)
