@@ -4,4 +4,21 @@
     <string name="app_name">Scheduler</string>
     <string name="add_event">add</string>
     <string name="del_event">delete</string>
+    <string name="no_events">No Events Yet</string>
+    <string name="menu_insert">Add Event</string>
+    <string name="menu_delete">Delete Event</string>
+    <string name="title">Title:</string>
+	<string name="time">Time:</string>
+	<string name="repetition">Repetition:</string>
+	<string name="mode">Mode:</string>
+	<string-array name="ring_modes">
+		<item>Normal</item>
+		<item>Vibrate</item>
+		<item>Silent</item>
+	</string-array>
+	<string name="volume">Volume:</string>
+	<string name="vibrate">Vibrate</string>
+    <string name="confirm">Confirm</string>
+    <string name="edit_event">Edit Event</string>
+    <string name="normal">Normal</string>
 </resources>
