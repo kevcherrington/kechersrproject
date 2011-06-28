@@ -14,39 +14,38 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
 public class Scheduler extends ListActivity {
-	private static final int ACTIVITY_CREATE = 0;
-	private static final int ACTIVITY_EDIT = 1;
-	
-	private static final int INSERT_ID = Menu.FIRST;
+    private static final int ACTIVITY_CREATE=0;
+    private static final int ACTIVITY_EDIT=1;
+
+    private static final int INSERT_ID = Menu.FIRST;
     private static final int DELETE_ID = Menu.FIRST + 1;
 
-    private EventDbAdapter mDbHelper;
-    
+    private EventsDbAdapter mDbHelper;
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.events_list);
-        mDbHelper = new EventDbAdapter(this);
+        mDbHelper = new EventsDbAdapter(this);
         mDbHelper.open();
         fillData();
         registerForContextMenu(getListView());
     }
 
     private void fillData() {
-        // Get all of the rows from the database and create the item list
-        Cursor eventCursor = mDbHelper.fetchAllEvents();
-        startManagingCursor(eventCursor);
+        Cursor eventsCursor = mDbHelper.fetchAllEvents();
+        startManagingCursor(eventsCursor);
 
         // Create an array to specify the fields we want to display in the list (only TITLE)
-        String[] from = new String[]{DbFields.KEY_TITLE};
+        String[] from = new String[]{EventsDbAdapter.KEY_TITLE};
 
         // and an array of the fields we want to bind those fields to (in this case just text1)
         int[] to = new int[]{R.id.text1};
 
         // Now create a simple cursor adapter and set it to display
         SimpleCursorAdapter events = 
-            new SimpleCursorAdapter(this, R.layout.events_row, eventCursor, from, to);
+            new SimpleCursorAdapter(this, R.layout.events_row, eventsCursor, from, to);
         setListAdapter(events);
     }
 
@@ -96,7 +95,7 @@ public class Scheduler extends ListActivity {
     protected void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
         Intent i = new Intent(this, EventEdit.class);
-        i.putExtra(DbFields.KEY_ROWID, id);
+        i.putExtra(EventsDbAdapter.KEY_ROWID, id);
         startActivityForResult(i, ACTIVITY_EDIT);
     }
 
@@ -105,63 +104,4 @@ public class Scheduler extends ListActivity {
         super.onActivityResult(requestCode, resultCode, intent);
         fillData();
     }
-}    
-//		scheduleAlarm();
-//		silenceRinger();
-//		Toast.makeText(getApplicationContext(), "AlarmScheduled",
-//				Toast.LENGTH_SHORT).show();
-
-//        mHandler.removeCallbacks(showToast);
-//        mHandler.postDelayed(showToast, 10000);
-//    }
-//
-//    private void fillData() {
-//    	// get the rows from the db and create event list
-//    	Cursor eventCursor = mDbHelper.fetchAllEvents();
-//    	startManagingCursor(eventCursor);
-//    	
-//    	// Create an array to specify the fields we want to display
-//    	String[] from = new String[]{EventDbAdapter.KEY_TITLE};
-//    	
-//    	//
-//    	int[] to = new int[]{R.id.text1};
-//    	
-//    	SimpleCursorAdapter events =
-//    		new SimpleCursorAdapter(this, R.layout.event_row, )
-//    }
-//	private void silenceRinger() {
-//		AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-//	
-//		am.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-//	}
-//
-//	private void scheduleAlarm() {
-//		// get a Calendar object with current time
-//		Calendar cal = Calendar.getInstance();
-//		// add 5 minutes to the calendar object
-//		cal.add(Calendar.MINUTE, 1);
-//		Intent intent = new Intent(getApplicationContext(), AlarmRec.class);
-//		intent.putExtra("volume", new Integer(100));
-//		intent.putExtra("vibrate", new Integer(1));
-//		PendingIntent sender = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-//
-//		// Get the AlarmManager service
-//		AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
-//		am.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), sender);
-//	}
-//
-//	@Override
-//	public boolean onCreateOptionsMenu(Menu menu) {
-//	    MenuInflater inflater = getMenuInflater();
-//	    inflater.inflate(R.menu.menu, menu);
-//	    return true;
-//	}
-//	
-//    private Runnable showToast = new Runnable() {
-//    	public void run() {
-//    		Context context = getApplicationContext();
-//    		Toast toast = Toast.makeText(context, "Hello World", Toast.LENGTH_LONG);
-//    		toast.show();
-//    	}
-//    };
-//}
+}
