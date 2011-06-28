@@ -20,11 +20,11 @@ public final class R {
     }
     public static final class id {
         public static final int add_event=0x7f070007;
-        public static final int body=0x7f070001;
         public static final int confirm=0x7f070005;
         public static final int del_event=0x7f070008;
         public static final int mode=0x7f070002;
         public static final int text1=0x7f070006;
+        public static final int time_picker=0x7f070001;
         public static final int title=0x7f070000;
         public static final int vibrate=0x7f070004;
         public static final int volume=0x7f070003;
