@@ -6,12 +6,14 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TimePicker;
 
 public class EventEdit extends Activity {
 
 
-    private EditText mTitleText;
     private Long mRowId;
+    private EditText mTitleText;
+    private TimePicker mRunTime;
     private EventsDbAdapter mDbHelper;
 
     @Override
@@ -24,6 +26,7 @@ public class EventEdit extends Activity {
         setTitle(R.string.edit_event);
 
         mTitleText = (EditText) findViewById(R.id.title);
+        mRunTime = (TimePicker) findViewById(R.id.time_picker);
 
         Button confirmButton = (Button) findViewById(R.id.confirm);
 

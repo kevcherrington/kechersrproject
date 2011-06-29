@@ -11,8 +11,10 @@ import android.util.Log;
 public class EventsDbAdapter {
 
 
-    public static final String KEY_TITLE = "title";
     public static final String KEY_ROWID = "_id";
+    public static final String KEY_TITLE = "title";
+    public static final String KEY_RUN_TIME_HOUR = "run_time_hour";
+    public static final String KEY_RUN_TIME_MINUTE = "run_time_minute";
 
     private static final String TAG = "EventsDbAdapter";
     private DatabaseHelper mDbHelper;
@@ -22,12 +24,12 @@ public class EventsDbAdapter {
      * Database creation sql statement
      */
     private static final String DATABASE_CREATE =
-        "create table events (_id integer primary key autoincrement, "
-        + "title text not null);";
+        "CREATE TABLE events (_id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        + "title TEXT NOT NULL, run_time_hour INTEGER NOT NULL);";
 
     private static final String DATABASE_NAME = "data";
     private static final String DATABASE_TABLE = "events";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     private final Context mCtx;
 
@@ -90,9 +92,11 @@ public class EventsDbAdapter {
      * @param title the title of the event
      * @return rowId or -1 if failed
      */
-    public long createEvent(String title) { 
+    public long createEvent(String title, int runTimeHour, int runTimeMin) { 
         ContentValues initialValues = new ContentValues();
         initialValues.put(KEY_TITLE, title);
+        initialValues.put(KEY_RUN_TIME_HOUR, runTimeHour);
+        initialValues.put(KEY_RUN_TIME_MINUTE, runTimeMin);
 
         return mDb.insert(DATABASE_TABLE, null, initialValues);
     }
@@ -115,7 +119,8 @@ public class EventsDbAdapter {
      */
     public Cursor fetchAllEvents() {
 
-        return mDb.query(DATABASE_TABLE, new String[] {KEY_ROWID, KEY_TITLE},
+        return mDb.query(DATABASE_TABLE, new String[] {KEY_ROWID, KEY_TITLE,
+        		KEY_RUN_TIME_HOUR, KEY_RUN_TIME_MINUTE},
         		null, null, null, null, null);
     }
 
@@ -131,8 +136,8 @@ public class EventsDbAdapter {
         Cursor mCursor =
 
             mDb.query(true, DATABASE_TABLE, new String[] {KEY_ROWID,
-                    KEY_TITLE}, KEY_ROWID + "=" + rowId, null,
-                    null, null, null, null);
+                    KEY_TITLE, KEY_RUN_TIME_HOUR, KEY_RUN_TIME_MINUTE}
+            		, KEY_ROWID + "=" + rowId, null, null, null, null, null);
         if (mCursor != null) {
             mCursor.moveToFirst();
         }
@@ -149,9 +154,11 @@ public class EventsDbAdapter {
      * @param title value to set event title to
      * @return true if the event was successfully updated, false otherwise
      */
-    public boolean updateEvent(long rowId, String title) {
+    public boolean updateEvent(long rowId, String title, int runTimeHour, int runTimeMin) {
         ContentValues args = new ContentValues();
         args.put(KEY_TITLE, title);
+        args.put(KEY_RUN_TIME_HOUR, runTimeHour);
+        args.put(KEY_RUN_TIME_MINUTE, runTimeMin);
 
         return mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
     }
