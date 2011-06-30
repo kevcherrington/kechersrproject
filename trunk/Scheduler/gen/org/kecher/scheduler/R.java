@@ -19,11 +19,19 @@ public final class R {
         public static final int icon=0x7f020002;
     }
     public static final class id {
-        public static final int add_event=0x7f070003;
-        public static final int confirm=0x7f070001;
-        public static final int del_event=0x7f070004;
-        public static final int text1=0x7f070002;
+        public static final int add_event=0x7f07000b;
+        public static final int confirm=0x7f070009;
+        public static final int del_event=0x7f07000c;
+        public static final int fri=0x7f070007;
+        public static final int mon=0x7f070003;
+        public static final int run_time=0x7f070001;
+        public static final int sat=0x7f070008;
+        public static final int sun=0x7f070002;
+        public static final int text1=0x7f07000a;
+        public static final int thur=0x7f070006;
         public static final int title=0x7f070000;
+        public static final int tues=0x7f070004;
+        public static final int wed=0x7f070005;
     }
     public static final class layout {
         public static final int event_edit=0x7f030000;
@@ -40,15 +48,22 @@ public final class R {
         public static final int confirm=0x7f04000c;
         public static final int del_event=0x7f040002;
         public static final int edit_event=0x7f04000d;
+        public static final int friday=0x7f040014;
         public static final int menu_delete=0x7f040005;
         public static final int menu_insert=0x7f040004;
         public static final int mode=0x7f040009;
+        public static final int monday=0x7f040010;
         public static final int no_events=0x7f040003;
         public static final int normal=0x7f04000e;
         public static final int repetition=0x7f040008;
+        public static final int saturday=0x7f040015;
+        public static final int sunday=0x7f04000f;
+        public static final int thursday=0x7f040013;
         public static final int time=0x7f040007;
         public static final int title=0x7f040006;
+        public static final int tuesday=0x7f040011;
         public static final int vibrate=0x7f04000b;
         public static final int volume=0x7f04000a;
+        public static final int wednesday=0x7f040012;
     }
 }

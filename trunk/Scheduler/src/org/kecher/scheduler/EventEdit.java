@@ -5,16 +5,25 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TimePicker;
 
 public class EventEdit extends Activity {
 
-
     private Long mRowId;
     private EditText mTitleText;
     private TimePicker mRunTime;
+    private CheckBox mSun;
+    private CheckBox mMon;
+    private CheckBox mTues;
+    private CheckBox mWed;
+    private CheckBox mThur;
+    private CheckBox mFri;
+    private CheckBox mSat;
+    private Button mConfirm;
     private EventsDbAdapter mDbHelper;
+    
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,9 +35,16 @@ public class EventEdit extends Activity {
         setTitle(R.string.edit_event);
 
         mTitleText = (EditText) findViewById(R.id.title);
-        mRunTime = (TimePicker) findViewById(R.id.time_picker);
+        mRunTime = (TimePicker) findViewById(R.id.run_time);
+        mSun = (CheckBox) findViewById(R.id.sun);
+        mMon = (CheckBox) findViewById(R.id.mon);
+        mTues = (CheckBox) findViewById(R.id.tues);
+        mWed = (CheckBox) findViewById(R.id.wed);
+        mThur = (CheckBox) findViewById(R.id.thur);
+        mFri = (CheckBox) findViewById(R.id.fri);
+        mSat = (CheckBox) findViewById(R.id.sat);
 
-        Button confirmButton = (Button) findViewById(R.id.confirm);
+        mConfirm = (Button) findViewById(R.id.confirm);
 
         mRowId = (savedInstanceState == null) ? null :
             (Long) savedInstanceState.getSerializable(EventsDbAdapter.KEY_ROWID);
@@ -40,7 +56,7 @@ public class EventEdit extends Activity {
 
 		populateFields();
 
-        confirmButton.setOnClickListener(new View.OnClickListener() {
+        mConfirm.setOnClickListener(new View.OnClickListener() {
 
             public void onClick(View view) {
                 setResult(RESULT_OK);
@@ -56,6 +72,12 @@ public class EventEdit extends Activity {
             startManagingCursor(event);
             mTitleText.setText(event.getString(
                     event.getColumnIndexOrThrow(EventsDbAdapter.KEY_TITLE)));
+            mRunTime.setCurrentHour(event.getInt(
+            		event.getColumnIndexOrThrow(EventsDbAdapter.KEY_RUN_TIME_HOUR)));
+            mRunTime.setCurrentMinute(event.getInt(
+            		event.getColumnIndexOrThrow(EventsDbAdapter.KEY_RUN_TIME_MINUTE)));
+            mSun.setChecked(event.getInt(
+            		event.getColumnIndexOrThrow(EventsDbAdapter.KEY_SUNDAY)));
         }
     }
 
@@ -80,14 +102,16 @@ public class EventEdit extends Activity {
 
     private void saveState() {
         String title = mTitleText.getText().toString();
+        int runHour = mRunTime.getCurrentHour();
+        int runMin = mRunTime.getCurrentMinute();
 
         if (mRowId == null) {
-            long id = mDbHelper.createEvent(title);
+            long id = mDbHelper.createEvent(title, runHour, runMin);
             if (id > 0) {
                 mRowId = id;
             }
         } else {
-            mDbHelper.updateEvent(mRowId, title);
+            mDbHelper.updateEvent(mRowId, title, runHour, runMin);
         }
     }
 
