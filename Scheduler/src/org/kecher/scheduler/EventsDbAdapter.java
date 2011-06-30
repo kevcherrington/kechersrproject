@@ -15,6 +15,13 @@ public class EventsDbAdapter {
     public static final String KEY_TITLE = "title";
     public static final String KEY_RUN_TIME_HOUR = "run_time_hour";
     public static final String KEY_RUN_TIME_MINUTE = "run_time_minute";
+    public static final String KEY_SUN = "sun";
+    public static final String KEY_MON = "mon";
+    public static final String KEY_TUES = "tues";
+    public static final String KEY_WED = "wed";
+    public static final String KEY_THUR = "thur";
+    public static final String KEY_FRI = "fri";
+    public static final String KEY_SAT = "sat";
 
     private static final String TAG = "EventsDbAdapter";
     private DatabaseHelper mDbHelper;
@@ -25,11 +32,15 @@ public class EventsDbAdapter {
      */
     private static final String DATABASE_CREATE =
         "CREATE TABLE events (_id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        + "title TEXT NOT NULL, run_time_hour INTEGER NOT NULL);";
+        + "title TEXT NOT NULL, run_time_hour INTEGER NOT NULL, "
+        + "run_time_minute INTEGER NOT NULL, sun INTEGER NOT NULL, "
+        + "mon INTEGER NOT NULL, tues INTEGER NOT NULL, "
+        + "wed INTEGER NOT NULL, thur INTEGER NOT NULL, "
+        + "fri INTEGER NOT NULL, sat INTEGER NOT NULL);";
 
     private static final String DATABASE_NAME = "data";
     private static final String DATABASE_TABLE = "events";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 1;
 
     private final Context mCtx;
 
@@ -92,7 +103,8 @@ public class EventsDbAdapter {
      * @param title the title of the event
      * @return rowId or -1 if failed
      */
-    public long createEvent(String title, int runTimeHour, int runTimeMin) { 
+    public long createEvent(String title, int runTimeHour, int runTimeMin, int sun, int mon, int tues,
+    		int wed, int thur, int fri, int sat) { 
         ContentValues initialValues = new ContentValues();
         initialValues.put(KEY_TITLE, title);
         initialValues.put(KEY_RUN_TIME_HOUR, runTimeHour);
