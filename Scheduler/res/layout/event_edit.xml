@@ -64,11 +64,35 @@
 			android:layout_width="wrap_content"
 			android:text="@string/saturday" />
 			
+		<TextView android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:text="@string/mode" />
+		
+		<Spinner android:id="@+id/mode"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:prompt="@string/prompt" />
+		
+		<TextView android:id="@+id/voltext"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:text="@string/volume" />
+		
+		<SeekBar android:id="@+id/volbar"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content" />
+		
+		<ToggleButton android:id="@+id/vibe"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:textOn="@string/vibrate"
+			android:textOff="@string/vibrate" />
+
 		<Button android:id="@+id/confirm"
 			android:text="@string/confirm"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content" />
-
+			
 	</LinearLayout>
 	
 </ScrollView>
