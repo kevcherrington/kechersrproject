@@ -80,13 +80,18 @@ public class Scheduler extends ListActivity{
             case DELETE_ID:
                 AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
                 mDbHelper.deleteEvent(info.id);
+                removeIntent();
                 fillData();
                 return true;
         }
         return super.onContextItemSelected(item);
     }
 
-    private void createEvent() {
+    private void removeIntent() {
+		// TODO Complete this function remove the intent from the alarm manager.
+	}
+
+	private void createEvent() {
         Intent i = new Intent(this, EventEdit.class);
         startActivityForResult(i, ACTIVITY_CREATE);
     }

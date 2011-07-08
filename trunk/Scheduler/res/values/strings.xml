@@ -15,6 +15,7 @@
 		<item>Vibrate</item>
 		<item>Silent</item>
 	</string-array>
+	<string name="prompt">Choose a mode:</string>
 	<string name="volume">Volume:</string>
 	<string name="vibrate">Vibrate</string>
     <string name="confirm">Confirm</string>

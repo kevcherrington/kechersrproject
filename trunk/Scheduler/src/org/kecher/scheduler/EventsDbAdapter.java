@@ -22,6 +22,9 @@ public class EventsDbAdapter {
     public static final String KEY_THUR = "thur";
     public static final String KEY_FRI = "fri";
     public static final String KEY_SAT = "sat";
+    public static final String KEY_MODE = "mode";
+    public static final String KEY_VOL = "vol";
+    public static final String KEY_VIBRATE = "vibrate";
 
     private static final String TAG = "EventsDbAdapter";
     private DatabaseHelper mDbHelper;
@@ -36,7 +39,9 @@ public class EventsDbAdapter {
         + "run_time_minute INTEGER NOT NULL, sun INTEGER NOT NULL, "
         + "mon INTEGER NOT NULL, tues INTEGER NOT NULL, "
         + "wed INTEGER NOT NULL, thur INTEGER NOT NULL, "
-        + "fri INTEGER NOT NULL, sat INTEGER NOT NULL);";
+        + "fri INTEGER NOT NULL, sat INTEGER NOT NULL, "
+        + "mode TEXT NOT NULL, vol INTEGER NOT NULL, "
+        + "vibrate INTEGER NOT NULL);";
 
     private static final String DATABASE_NAME = "data";
     private static final String DATABASE_TABLE = "events";
@@ -104,12 +109,22 @@ public class EventsDbAdapter {
      * @return rowId or -1 if failed
      */
     public long createEvent(String title, int runTimeHour, int runTimeMin, int sun, int mon, int tues,
-    		int wed, int thur, int fri, int sat) { 
+    		int wed, int thur, int fri, int sat, String mode, int vol, int vibe) { 
         ContentValues initialValues = new ContentValues();
         initialValues.put(KEY_TITLE, title);
         initialValues.put(KEY_RUN_TIME_HOUR, runTimeHour);
         initialValues.put(KEY_RUN_TIME_MINUTE, runTimeMin);
-
+        initialValues.put(KEY_SUN, sun);
+        initialValues.put(KEY_MON, mon);
+        initialValues.put(KEY_TUES, tues);
+        initialValues.put(KEY_WED, wed);
+        initialValues.put(KEY_THUR, thur);
+        initialValues.put(KEY_FRI, fri);
+        initialValues.put(KEY_SAT, sat);
+        initialValues.put(KEY_MODE, mode);
+        initialValues.put(KEY_VOL, vol);
+        initialValues.put(KEY_VIBRATE, vibe);
+        
         return mDb.insert(DATABASE_TABLE, null, initialValues);
     }
 
@@ -132,7 +147,9 @@ public class EventsDbAdapter {
     public Cursor fetchAllEvents() {
 
         return mDb.query(DATABASE_TABLE, new String[] {KEY_ROWID, KEY_TITLE,
-        		KEY_RUN_TIME_HOUR, KEY_RUN_TIME_MINUTE},
+        		KEY_RUN_TIME_HOUR, KEY_RUN_TIME_MINUTE, KEY_SUN, KEY_MON,
+        		KEY_TUES, KEY_WED, KEY_THUR, KEY_FRI, KEY_SAT, KEY_MODE,
+        		KEY_VOL, KEY_VIBRATE},
         		null, null, null, null, null);
     }
 
@@ -146,10 +163,10 @@ public class EventsDbAdapter {
     public Cursor fetchEvent(long rowId) throws SQLException {
 
         Cursor mCursor =
-
             mDb.query(true, DATABASE_TABLE, new String[] {KEY_ROWID,
-                    KEY_TITLE, KEY_RUN_TIME_HOUR, KEY_RUN_TIME_MINUTE}
-            		, KEY_ROWID + "=" + rowId, null, null, null, null, null);
+                    KEY_TITLE, KEY_RUN_TIME_HOUR, KEY_RUN_TIME_MINUTE, KEY_SUN, KEY_MON,
+            		KEY_TUES, KEY_WED, KEY_THUR, KEY_FRI, KEY_SAT, KEY_MODE, KEY_VOL, KEY_VIBRATE},
+            		KEY_ROWID + "=" + rowId, null, null, null, null, null);
         if (mCursor != null) {
             mCursor.moveToFirst();
         }
@@ -166,11 +183,22 @@ public class EventsDbAdapter {
      * @param title value to set event title to
      * @return true if the event was successfully updated, false otherwise
      */
-    public boolean updateEvent(long rowId, String title, int runTimeHour, int runTimeMin) {
+    public boolean updateEvent(long rowId, String title, int runTimeHour, int runTimeMin,
+    		int sun, int mon, int tues, int wed, int thur, int fri, int sat, String mode, int vol, int vibe) {
         ContentValues args = new ContentValues();
         args.put(KEY_TITLE, title);
         args.put(KEY_RUN_TIME_HOUR, runTimeHour);
         args.put(KEY_RUN_TIME_MINUTE, runTimeMin);
+        args.put(KEY_SUN, sun);
+        args.put(KEY_MON, mon);
+        args.put(KEY_TUES, tues);
+        args.put(KEY_WED, wed);
+        args.put(KEY_THUR, thur);
+        args.put(KEY_FRI, fri);
+        args.put(KEY_SAT, sat);
+        args.put(KEY_MODE, mode);
+        args.put(KEY_VOL, vol);
+        args.put(KEY_VIBRATE, vibe);
 
         return mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
     }
