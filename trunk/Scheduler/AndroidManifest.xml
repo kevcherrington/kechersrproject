@@ -14,5 +14,12 @@
             </intent-filter>
         </activity>
 		<activity android:name=".EventEdit" />
+		<receiver android:name="SchedulerReciever">
+			<intent-filter>
+				<action android:name="android.intent.action.BOOT_COMPLETED" />
+				<category android:name="android.intent.category.DEFAULT" />
+			</intent-filter>
+		</receiver>
+		<service android:name="org.kecher.scheduler.SchedulerService" />
     </application>
 </manifest>

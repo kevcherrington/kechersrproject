@@ -44,9 +44,7 @@ public class EventEdit extends Activity {
 			mModeString = mMode.getItemAtPosition(pos).toString();
 		}
 
-		public void onNothingSelected(AdapterView<?> parent) {
-			// Do nothing
-		}
+		public void onNothingSelected(AdapterView<?> parent) { /* Do nothing*/ }
 	}
 
 	public class MySeekBarChangeListener implements OnSeekBarChangeListener {
@@ -59,6 +57,7 @@ public class EventEdit extends Activity {
 		
 		public void onStopTrackingTouch (SeekBar seekBar) { /* do nothing */}
 	}
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -107,6 +106,7 @@ public class EventEdit extends Activity {
 		mConfirm.setOnClickListener(new View.OnClickListener() {
 
 			public void onClick(View view) {
+				scheduleEvent();
 				setResult(RESULT_OK);
 				finish();
 			}
@@ -214,4 +214,7 @@ public class EventEdit extends Activity {
 		}
 	}
 
+	private void scheduleEvent() {
+		// TODO Auto-generated method stub
+	}
 }
