@@ -25,6 +25,8 @@ public class EventsDbAdapter {
     public static final String KEY_MODE = "mode";
     public static final String KEY_VOL = "vol";
     public static final String KEY_VIBRATE = "vibrate";
+    public static final String KEY_LAST_RUN = "last_run";
+    public static final String KEY_NEXT_RUN = "next_run";
 
     private static final String TAG = "EventsDbAdapter";
     private DatabaseHelper mDbHelper;
@@ -32,6 +34,7 @@ public class EventsDbAdapter {
 
     /**
      * Database creation sql statement
+     * Sqlite3 ints can be upto 8 bytes in size. equivalent to a 64bit int.
      */
     private static final String DATABASE_CREATE =
         "CREATE TABLE events (_id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -41,7 +44,8 @@ public class EventsDbAdapter {
         + "wed INTEGER NOT NULL, thur INTEGER NOT NULL, "
         + "fri INTEGER NOT NULL, sat INTEGER NOT NULL, "
         + "mode TEXT NOT NULL, vol INTEGER NOT NULL, "
-        + "vibrate INTEGER NOT NULL);";
+        + "vibrate INTEGER NOT NULL, last_run INTEGER NOT NULL, "
+        + "next_run INTEGER NOT NULL);";
 
     private static final String DATABASE_NAME = "data";
     private static final String DATABASE_TABLE = "events";
@@ -109,7 +113,7 @@ public class EventsDbAdapter {
      * @return rowId or -1 if failed
      */
     public long createEvent(String title, int runTimeHour, int runTimeMin, int sun, int mon, int tues,
-    		int wed, int thur, int fri, int sat, String mode, int vol, int vibe) { 
+    		int wed, int thur, int fri, int sat, String mode, int vol, int vibe, long nextRun, long lastRun) { 
         ContentValues initialValues = new ContentValues();
         initialValues.put(KEY_TITLE, title);
         initialValues.put(KEY_RUN_TIME_HOUR, runTimeHour);
@@ -124,6 +128,8 @@ public class EventsDbAdapter {
         initialValues.put(KEY_MODE, mode);
         initialValues.put(KEY_VOL, vol);
         initialValues.put(KEY_VIBRATE, vibe);
+        initialValues.put(KEY_NEXT_RUN, nextRun);
+        initialValues.put(KEY_LAST_RUN, lastRun);
         
         return mDb.insert(DATABASE_TABLE, null, initialValues);
     }
@@ -149,7 +155,7 @@ public class EventsDbAdapter {
         return mDb.query(DATABASE_TABLE, new String[] {KEY_ROWID, KEY_TITLE,
         		KEY_RUN_TIME_HOUR, KEY_RUN_TIME_MINUTE, KEY_SUN, KEY_MON,
         		KEY_TUES, KEY_WED, KEY_THUR, KEY_FRI, KEY_SAT, KEY_MODE,
-        		KEY_VOL, KEY_VIBRATE},
+        		KEY_VOL, KEY_VIBRATE, KEY_LAST_RUN, KEY_NEXT_RUN},
         		null, null, null, null, null);
     }
 
@@ -165,7 +171,8 @@ public class EventsDbAdapter {
         Cursor mCursor =
             mDb.query(true, DATABASE_TABLE, new String[] {KEY_ROWID,
                     KEY_TITLE, KEY_RUN_TIME_HOUR, KEY_RUN_TIME_MINUTE, KEY_SUN, KEY_MON,
-            		KEY_TUES, KEY_WED, KEY_THUR, KEY_FRI, KEY_SAT, KEY_MODE, KEY_VOL, KEY_VIBRATE},
+            		KEY_TUES, KEY_WED, KEY_THUR, KEY_FRI, KEY_SAT, KEY_MODE, KEY_VOL, KEY_VIBRATE,
+            		KEY_LAST_RUN, KEY_NEXT_RUN},
             		KEY_ROWID + "=" + rowId, null, null, null, null, null);
         if (mCursor != null) {
             mCursor.moveToFirst();
@@ -184,7 +191,8 @@ public class EventsDbAdapter {
      * @return true if the event was successfully updated, false otherwise
      */
     public boolean updateEvent(long rowId, String title, int runTimeHour, int runTimeMin,
-    		int sun, int mon, int tues, int wed, int thur, int fri, int sat, String mode, int vol, int vibe) {
+    		int sun, int mon, int tues, int wed, int thur, int fri, int sat, String mode,
+    		int vol, int vibe, long lastRun, long nextRun) {
         ContentValues args = new ContentValues();
         args.put(KEY_TITLE, title);
         args.put(KEY_RUN_TIME_HOUR, runTimeHour);
@@ -199,7 +207,15 @@ public class EventsDbAdapter {
         args.put(KEY_MODE, mode);
         args.put(KEY_VOL, vol);
         args.put(KEY_VIBRATE, vibe);
+        args.put(KEY_LAST_RUN, lastRun);
+        args.put(KEY_NEXT_RUN, nextRun);
 
         return mDb.update(DATABASE_TABLE, args, KEY_ROWID + "=" + rowId, null) > 0;
+    }
+    
+    public Cursor updateEventRunTimes(Long rowId, Long lastRun, Long nextRun) {
+    	return mDb.rawQuery(("UPDATE " + DATABASE_TABLE + " SET " + KEY_LAST_RUN + "=?, "
+    			+ KEY_NEXT_RUN + "=? WHERE " + KEY_ROWID + " =?"), 
+    			new String[] {lastRun.toString(), nextRun.toString(), rowId.toString()});
     }
 }

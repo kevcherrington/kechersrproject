@@ -1,6 +1,12 @@
 package org.kecher.scheduler;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
@@ -30,6 +36,7 @@ public class EventEdit extends Activity {
 	private CheckBox mThur;
 	private CheckBox mFri;
 	private CheckBox mSat;
+	private ArrayList<Boolean> mWeekDays;
 	private Spinner mMode;
 	private String mModeString;
 	private TextView mVolText;
@@ -38,6 +45,11 @@ public class EventEdit extends Activity {
 	private Button mConfirm;
 	private EventsDbAdapter mDbHelper;
 
+	/*
+	 * public inner class that defines the item selected listener for
+	 * the mMode spinner. When nothing is selected it should default
+	 * to the first item in the ring_modes array.
+	 */
 	public class MyItemSelectedListener implements OnItemSelectedListener {
 		public void onItemSelected(AdapterView<?> parent, View view, int pos,
 				long id) {
@@ -47,6 +59,13 @@ public class EventEdit extends Activity {
 		public void onNothingSelected(AdapterView<?> parent) { /* Do nothing*/ }
 	}
 
+	/*
+	 * Public inner class that defines the seek bar change listener for 
+	 * mVolBar. We do nothing with start and stop tracking touch because
+	 * we will make a direct call to mVolBar when we want to get the value.
+	 * This class is mainly used to update the percentage shown by the 
+	 * volume title.
+	 */
 	public class MySeekBarChangeListener implements OnSeekBarChangeListener {
 		public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 			mVolText.setText("Volume: " + (seekBar.getProgress()+1) + "%");
@@ -82,7 +101,7 @@ public class EventEdit extends Activity {
 		mVolBar.setMax(100);
 		mVolBar.setOnSeekBarChangeListener(new MySeekBarChangeListener());
 		mVibrate = (ToggleButton) findViewById(R.id.vibe);
-
+		mWeekDays = new ArrayList<Boolean>();
 		mConfirm = (Button) findViewById(R.id.confirm);
 
 		mRowId = (savedInstanceState == null) ? null
@@ -204,17 +223,51 @@ public class EventEdit extends Activity {
 
 		if (mRowId == null) {
 			long id = mDbHelper.createEvent(title, runHour, runMin, sun, mon,
-					tues, wed, thur, fri, sat, mode, vol, vibe);
+					tues, wed, thur, fri, sat, mode, vol, vibe, 0L, 0L);
 			if (id > 0) {
 				mRowId = id;
 			}
 		} else {
 			mDbHelper.updateEvent(mRowId, title, runHour, runMin, sun, mon,
-					tues, wed, thur, fri, sat, mode, vol, vibe);
+					tues, wed, thur, fri, sat, mode, vol, vibe, 0L, 0L);
 		}
 	}
 
 	private void scheduleEvent() {
-		// TODO Auto-generated method stub
+		Calendar cal = Calendar.getInstance();
+		
+		cal.set(Calendar.HOUR_OF_DAY, mRunTime.getCurrentHour());
+		cal.set(Calendar.MINUTE, mRunTime.getCurrentMinute());
+		cal.set(Calendar.SECOND, 0);
+		cal.set(Calendar.MILLISECOND, 0);
+		
+		mWeekDays.add(mSun.isChecked());
+		mWeekDays.add(mMon.isChecked());
+		mWeekDays.add(mTues.isChecked());
+		mWeekDays.add(mWed.isChecked());
+		mWeekDays.add(mThur.isChecked());
+		mWeekDays.add(mFri.isChecked());
+		mWeekDays.add(mSat.isChecked());
+		
+		int curDay = cal.get(Calendar.DAY_OF_WEEK);
+		curDay--;
+		for (int i = 0; i < 7; i++) {
+			if (mWeekDays.get((curDay + i) % 7)) {
+				cal.add(Calendar.DAY_OF_MONTH, i);
+				break;
+			}
+		}
+		
+		Intent intent = new Intent(getApplicationContext(), SchedulerReciever.class);
+		intent.putExtra(EventsDbAdapter.KEY_ROWID, mRowId);
+		
+		PendingIntent sender = PendingIntent.getBroadcast(
+				this, 123456, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+		
+		AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+		am.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), sender);
+
+		mDbHelper.updateEventRunTimes(mRowId, 0L, cal.getTimeInMillis());
+				
 	}
 }
