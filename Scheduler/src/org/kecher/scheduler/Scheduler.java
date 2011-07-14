@@ -1,6 +1,11 @@
 package org.kecher.scheduler;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+
+import android.app.AlarmManager;
 import android.app.ListActivity;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -19,6 +24,7 @@ public class Scheduler extends ListActivity{
 
     private static final int INSERT_ID = Menu.FIRST;
     private static final int DELETE_ID = Menu.FIRST + 1;
+	private ArrayList<Boolean> mWeekDays;
 
     private EventsDbAdapter mDbHelper;
 
@@ -107,6 +113,46 @@ public class Scheduler extends ListActivity{
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
+        scheduleEvent();
         fillData();
     }
+    
+	private void scheduleEvent() {
+		Calendar cal = Calendar.getInstance();
+		
+		cal.set(Calendar.HOUR_OF_DAY, mRunTime.getCurrentHour());
+		cal.set(Calendar.MINUTE, mRunTime.getCurrentMinute());
+		cal.set(Calendar.SECOND, 0);
+		cal.set(Calendar.MILLISECOND, 0);
+		
+		mWeekDays.add(mSun.isChecked());
+		mWeekDays.add(mMon.isChecked());
+		mWeekDays.add(mTues.isChecked());
+		mWeekDays.add(mWed.isChecked());
+		mWeekDays.add(mThur.isChecked());
+		mWeekDays.add(mFri.isChecked());
+		mWeekDays.add(mSat.isChecked());
+		
+		int curDay = cal.get(Calendar.DAY_OF_WEEK);
+		curDay--;
+		for (int i = 0; i < 7; i++) {
+			if (mWeekDays.get((curDay + i) % 7)) {
+				cal.add(Calendar.DAY_OF_MONTH, i);
+				break;
+			}
+		}
+		
+		Intent intent = new Intent(getApplicationContext(), SchedulerReciever.class);
+		intent.putExtra(EventsDbAdapter.KEY_ROWID, mRowId);
+		
+		PendingIntent sender = PendingIntent.getBroadcast(
+				this, 123456, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+		
+		AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+		am.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), sender);
+
+		mDbHelper.updateEventRunTimes(mRowId, 0L, cal.getTimeInMillis());
+				
+	}
+
 }
