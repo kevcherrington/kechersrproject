@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -34,6 +35,8 @@ public class SchedulerReciever extends BroadcastReceiver {
 				mDbAdapter = new EventsDbAdapter(context);
 				mDbAdapter.open();
 				
+				AudioManager adoMngr = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+				
 				Bundle bundle = intent.getExtras();
 				
 				Cursor event = mDbAdapter.fetchEvent(bundle.getLong(EventsDbAdapter.KEY_ROWID));
@@ -43,14 +46,24 @@ public class SchedulerReciever extends BroadcastReceiver {
 					? true : false;
 				String[] modes = context.getResources().getStringArray(R.array.ring_modes);
 				
+			
 				if (mode.equals(modes[2])) { // Silent
 					Log.d(TAG, "Changed to " + mode + " " + vol + " " + vibe);
+					adoMngr.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+//					adoMngr.setVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER,
+//							AudioManager.VIBRATE_SETTING_OFF);
+//					adoMngr.setVibrateSetting(AudioManager.VIBRATE_TYPE_NOTIFICATION,
+//							AudioManager.VIBRATE_SETTING_OFF);
+//					adoMngr.setStreamVolume(AudioManager.STREAM_RING, 0,
+//							AudioManager.FLAG_SHOW_UI);
 					// turn off Ringer and Vibrate
 				} else if (mode.equals(modes[1])) { // Vibrate
 					Log.d(TAG, "Changed to " + mode + " " + vol + " " + vibe);
+					adoMngr.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
 					// Set phone to vibrate and turn off ringer.
 				} else if (mode.equals(modes[0])) { // Normal
 					Log.d(TAG, "Changed to " + mode + " " + vol + " " + vibe);
+					adoMngr.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
 					// Set the Volume and vibrate indicated.
 				} else {
 					throw new Exception("Ring Scheduler: invalid mode provided");
