@@ -1,8 +1,12 @@
 package org.kecher.scheduler;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,7 +25,8 @@ import android.widget.TimePicker;
 import android.widget.ToggleButton;
 
 public class EventEdit extends Activity {
-
+	private static final String TAG = "EventEdit";
+	
 	private Long mRowId;
 	private EditText mTitleText;
 	private TimePicker mRunTime;
@@ -39,6 +44,8 @@ public class EventEdit extends Activity {
 	private ToggleButton mVibrate;
 	private Button mConfirm;
 	private EventsDbAdapter mDbHelper;
+	
+	private ArrayList<Boolean> mWeekDays;
 
 	/*
 	 * public inner class that defines the item selected listener for
@@ -97,7 +104,7 @@ public class EventEdit extends Activity {
 		mVolBar.setOnSeekBarChangeListener(new MySeekBarChangeListener());
 		mVibrate = (ToggleButton) findViewById(R.id.vibe);
 		mConfirm = (Button) findViewById(R.id.confirm);
-
+		
 		mRowId = (savedInstanceState == null) ? null
 				: (Long) savedInstanceState
 						.getSerializable(EventsDbAdapter.KEY_ROWID);
@@ -187,10 +194,16 @@ public class EventEdit extends Activity {
 		outState.putSerializable(EventsDbAdapter.KEY_ROWID, mRowId);
 	}
 
+	/*
+	 * On pause is always called when an activity ends. So now would be the time
+	 * to schedule the event if we are going to schedule it.
+	 */
 	@Override
 	protected void onPause() {
 		super.onPause();
 		saveState();
+		Log.d(TAG, "Saved event in DB");
+		scheduleEvent();
 	}
 
 	@Override
@@ -224,5 +237,45 @@ public class EventEdit extends Activity {
 			mDbHelper.updateEvent(mRowId, title, runHour, runMin, sun, mon,
 					tues, wed, thur, fri, sat, mode, vol, vibe, 0L, 0L);
 		}
+	}
+
+	private void scheduleEvent() {
+		Calendar cal = Calendar.getInstance();
+		
+		cal.set(Calendar.HOUR_OF_DAY, mRunTime.getCurrentHour());
+		cal.set(Calendar.MINUTE, mRunTime.getCurrentMinute());
+		cal.set(Calendar.SECOND, 0);
+		cal.set(Calendar.MILLISECOND, 0);
+		
+		mWeekDays = new ArrayList<Boolean>();
+
+		mWeekDays.add(mSun.isChecked());
+		mWeekDays.add(mMon.isChecked());
+		mWeekDays.add(mTues.isChecked());
+		mWeekDays.add(mWed.isChecked());
+		mWeekDays.add(mThur.isChecked());
+		mWeekDays.add(mFri.isChecked());
+		mWeekDays.add(mSat.isChecked());
+		
+		int curDay = cal.get(Calendar.DAY_OF_WEEK);
+		curDay--;
+		for (int i = 0; i < 7; i++) {
+			if (mWeekDays.get((curDay + i) % 7)) {
+				cal.add(Calendar.DAY_OF_MONTH, i);
+				break;
+			}
+		}
+		
+		Intent intent = new Intent(getApplicationContext(), SchedulerReciever.class);
+		intent.putExtra(EventsDbAdapter.KEY_ROWID, mRowId);
+		
+		PendingIntent sender = PendingIntent.getBroadcast(
+				this, 123456, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+		
+		AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+		am.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), sender);
+
+		mDbHelper.updateEventRunTimes(mRowId, 0L, cal.getTimeInMillis());
+				
 	}
 }
