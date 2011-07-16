@@ -1,16 +1,14 @@
 package org.kecher.scheduler;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -19,12 +17,9 @@ public class SchedulerReciever extends BroadcastReceiver {
 	private static final String TAG = "Reciever";
 	// private SchedulerService service = new SchedulerService();
 	private EventsDbAdapter mDbAdapter;
-	private ArrayList<Boolean> mWeekDays;
-	private Context mContext;
-
+	
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		mContext = context;
 		if ((intent.getAction() != null)
 				&& (intent.getAction()
 						.equals("android.intent.action.BOOT_COMPLETED"))) {
@@ -57,26 +52,38 @@ public class SchedulerReciever extends BroadcastReceiver {
 				if (mode.equals(modes[2])) { // Silent
 					Log.d(TAG, "Changed to " + mode + " " + vol + " " + vibe);
 					adoMngr.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-					// adoMngr.setVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER,
-					// AudioManager.VIBRATE_SETTING_OFF);
-					// adoMngr.setVibrateSetting(AudioManager.VIBRATE_TYPE_NOTIFICATION,
-					// AudioManager.VIBRATE_SETTING_OFF);
+					adoMngr.setVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER,
+							AudioManager.VIBRATE_SETTING_OFF);
+					adoMngr.setVibrateSetting(
+							AudioManager.VIBRATE_TYPE_NOTIFICATION,
+							AudioManager.VIBRATE_SETTING_OFF);
 					// adoMngr.setStreamVolume(AudioManager.STREAM_RING, 0,
 					// AudioManager.FLAG_SHOW_UI);
 					// turn off Ringer and Vibrate
 				} else if (mode.equals(modes[1])) { // Vibrate
 					Log.d(TAG, "Changed to " + mode + " " + vol + " " + vibe);
 					adoMngr.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
+					
 					// Set phone to vibrate and turn off ringer.
 				} else if (mode.equals(modes[0])) { // Normal
 					Log.d(TAG, "Changed to " + mode + " " + vol + " " + vibe);
 					adoMngr.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+					
+					int volLvl = adoMngr.getStreamMaxVolume(AudioManager.STREAM_RING);
+					adoMngr.setStreamVolume(AudioManager.STREAM_RING, ((int)(volLvl * (vol * .01))), 
+							AudioManager.FLAG_SHOW_UI);
+					
+					int noteLvl = adoMngr.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
+					adoMngr.setStreamVolume(AudioManager.STREAM_NOTIFICATION, ((int)(noteLvl * (vol * .01))),
+							AudioManager.FLAG_SHOW_UI);
 
 					if (vibe) {
-						adoMngr.setVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER,
+						adoMngr.setVibrateSetting(
+								AudioManager.VIBRATE_TYPE_RINGER,
 								AudioManager.VIBRATE_SETTING_ON);
 					} else {
-						adoMngr.setVibrateSetting(AudioManager.VIBRATE_TYPE_RINGER,
+						adoMngr.setVibrateSetting(
+								AudioManager.VIBRATE_TYPE_RINGER,
 								AudioManager.VIBRATE_SETTING_OFF);
 					}
 					// Set the Volume and vibrate indicated.
@@ -85,74 +92,16 @@ public class SchedulerReciever extends BroadcastReceiver {
 				}
 
 				rescheduleEvent(bundle.getLong(EventsDbAdapter.KEY_ROWID));
-
+				event.close();
 			} catch (Exception e) {
 				Toast.makeText(context, "Ring Scheduler: An error occured",
 						Toast.LENGTH_SHORT).show();
 				e.printStackTrace();
 			} finally { // Make sure to release resources
+				Log.d(TAG, "closing DB");
 				mDbAdapter.close();
+				Log.d(TAG, "DB has been CLOSED.");
 			}
 		}
-	}
-
-	private void rescheduleEvent(Long rowId) {
-		Cursor event = mDbAdapter.fetchEvent(rowId);
-
-		Calendar cal = Calendar.getInstance();
-
-		cal.set(Calendar.HOUR_OF_DAY, event.getInt(event
-				.getColumnIndexOrThrow(EventsDbAdapter.KEY_RUN_TIME_HOUR)));
-		cal.set(Calendar.MINUTE, event.getInt(event
-				.getColumnIndexOrThrow(EventsDbAdapter.KEY_RUN_TIME_MINUTE)));
-		cal.set(Calendar.SECOND, 0);
-		cal.set(Calendar.MILLISECOND, 0);
-
-		mWeekDays = new ArrayList<Boolean>();
-
-		mWeekDays.add((event.getInt(event
-				.getColumnIndexOrThrow(EventsDbAdapter.KEY_SUN)) == 1) ? true
-				: false);
-		mWeekDays.add((event.getInt(event
-				.getColumnIndexOrThrow(EventsDbAdapter.KEY_MON)) == 1) ? true
-				: false);
-		mWeekDays.add((event.getInt(event
-				.getColumnIndexOrThrow(EventsDbAdapter.KEY_TUES)) == 1) ? true
-				: false);
-		mWeekDays.add((event.getInt(event
-				.getColumnIndexOrThrow(EventsDbAdapter.KEY_WED)) == 1) ? true
-				: false);
-		mWeekDays.add((event.getInt(event
-				.getColumnIndexOrThrow(EventsDbAdapter.KEY_THUR)) == 1) ? true
-				: false);
-		mWeekDays.add((event.getInt(event
-				.getColumnIndexOrThrow(EventsDbAdapter.KEY_FRI)) == 1) ? true
-				: false);
-		mWeekDays.add((event.getInt(event
-				.getColumnIndexOrThrow(EventsDbAdapter.KEY_SAT)) == 1) ? true
-				: false);
-
-		int curDay = cal.get(Calendar.DAY_OF_WEEK);
-		curDay--;
-		for (int i = 0; i < 7; i++) {
-			if (mWeekDays.get((curDay + i) % 7)) {
-				cal.add(Calendar.DAY_OF_MONTH, i);
-				break;
-			}
-		}
-
-		Intent intent = new Intent(mContext, SchedulerReciever.class);
-		intent.putExtra(EventsDbAdapter.KEY_ROWID, rowId);
-
-		PendingIntent sender = PendingIntent.getBroadcast(mContext, 123456,
-				intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-		AlarmManager am = (AlarmManager) mContext
-				.getSystemService(Context.ALARM_SERVICE);
-		am.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), sender);
-
-		mDbAdapter.updateEventRunTimes(rowId, (event.getLong(event
-				.getColumnIndexOrThrow(EventsDbAdapter.KEY_NEXT_RUN))), cal
-				.getTimeInMillis());
 	}
 }

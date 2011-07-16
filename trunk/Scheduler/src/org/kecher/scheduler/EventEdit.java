@@ -6,9 +6,13 @@ import java.util.Calendar;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -18,6 +22,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.SeekBar;
+import android.widget.Toast;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -46,6 +51,52 @@ public class EventEdit extends Activity {
 	private EventsDbAdapter mDbHelper;
 	
 	private ArrayList<Boolean> mWeekDays;
+
+	private SchedulerService mBoundService;
+	private boolean mIsBound;
+	
+	private ServiceConnection mConnection = new ServiceConnection() {
+	    public void onServiceConnected(ComponentName className, IBinder service) {
+	        // This is called when the connection with the service has been
+	        // established, giving us the service object we can use to
+	        // interact with the service.  Because we have bound to a explicit
+	        // service that we know is running in our own process, we can
+	        // cast its IBinder to a concrete class and directly access it.
+	        mBoundService = ((SchedulerService.LocalBinder)service).getService();
+
+	        // Tell the user about this for our demo.
+	        Toast.makeText(Binding.this, R.string.service_connected,
+	                Toast.LENGTH_SHORT).show();
+	    }
+
+	    public void onServiceDisconnected(ComponentName className) {
+	        // This is called when the connection with the service has been
+	        // unexpectedly disconnected -- that is, its process crashed.
+	        // Because it is running in our same process, we should never
+	        // see this happen.
+	        mBoundService = null;
+	        Toast.makeText(Binding.this, R.string.service_disconnected,
+	                Toast.LENGTH_SHORT).show();
+	    }
+	};
+	
+	void doBindService() {
+	    // Establish a connection with the service.  We use an explicit
+	    // class name because we want a specific service implementation that
+	    // we know will be running in our own process (and thus won't be
+	    // supporting component replacement by other applications).
+	    bindService(new Intent(Binding.this, 
+	            SchedulerService.class), mConnection, Context.BIND_AUTO_CREATE);
+	    mIsBound = true;
+	}
+
+	void doUnbindService() {
+		if (mIsBound) {
+	        // Detach our existing connection.
+	        unbindService(mConnection);
+	        mIsBound = false;
+	    }
+	}
 
 	/*
 	 * public inner class that defines the item selected listener for
@@ -270,7 +321,7 @@ public class EventEdit extends Activity {
 		intent.putExtra(EventsDbAdapter.KEY_ROWID, mRowId);
 		
 		PendingIntent sender = PendingIntent.getBroadcast(
-				this, 123456, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+				this, 123456, intent, PendingIntent.FLAG_CANCEL_CURRENT);
 		
 		AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
 		am.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), sender);
@@ -278,4 +329,11 @@ public class EventEdit extends Activity {
 		mDbHelper.updateEventRunTimes(mRowId, 0L, cal.getTimeInMillis());
 				
 	}
+	
+	@Override
+	protected void onDestroy() {
+	    super.onDestroy();
+	    doUnbindService();
+	}
+
 }
