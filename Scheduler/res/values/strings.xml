@@ -28,4 +28,9 @@
     <string name="thursday">Thursday</string>
     <string name="friday">Friday</string>
     <string name="saturday">Saturday</string>
+    <string name="service_stopped">Scheduler Service Stopped.</string>
+    <string name="service_started">Scheduler Service Started.</string>
+    <string name="service_label">Scheduler Service.</string>
+    <string name="service_connected">Connected to Scheduler Service.</string>
+    <string name="service_disconnected">Disconnected from Scheduler Service.</string>
 </resources>

@@ -99,7 +99,7 @@ public class Scheduler extends ListActivity{
 		intent.putExtra(EventsDbAdapter.KEY_ROWID, id);
 		
 		PendingIntent sender = PendingIntent.getBroadcast(
-				eeContext, 123456, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+				eeContext, 123456, intent, PendingIntent.FLAG_CANCEL_CURRENT);
 		
 		AlarmManager am = (AlarmManager) eeContext.getSystemService(Context.ALARM_SERVICE);
 		am.cancel(sender);

@@ -17,6 +17,7 @@ public final class R {
         public static final int add_event=0x7f020000;
         public static final int del_event=0x7f020001;
         public static final int icon=0x7f020002;
+        public static final int notification_icon=0x7f020003;
     }
     public static final class id {
         public static final int add_event=0x7f07000f;
@@ -62,6 +63,11 @@ public final class R {
         public static final int prompt=0x7f04000a;
         public static final int repetition=0x7f040008;
         public static final int saturday=0x7f040016;
+        public static final int service_connected=0x7f04001a;
+        public static final int service_disconnected=0x7f04001b;
+        public static final int service_label=0x7f040019;
+        public static final int service_started=0x7f040018;
+        public static final int service_stopped=0x7f040017;
         public static final int sunday=0x7f040010;
         public static final int thursday=0x7f040014;
         public static final int time=0x7f040007;
