@@ -1,11 +1,6 @@
 package org.kecher.scheduler;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-
 import android.app.Activity;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -22,11 +17,11 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.SeekBar;
-import android.widget.Toast;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 public class EventEdit extends Activity {
@@ -50,8 +45,6 @@ public class EventEdit extends Activity {
 	private Button mConfirm;
 	private EventsDbAdapter mDbHelper;
 	
-	private ArrayList<Boolean> mWeekDays;
-
 	private SchedulerService mBoundService;
 	private boolean mIsBound;
 	
@@ -65,7 +58,7 @@ public class EventEdit extends Activity {
 	        mBoundService = ((SchedulerService.LocalBinder)service).getService();
 
 	        // Tell the user about this for our demo.
-	        Toast.makeText(Binding.this, R.string.service_connected,
+	        Toast.makeText(EventEdit.this, R.string.service_connected,
 	                Toast.LENGTH_SHORT).show();
 	    }
 
@@ -75,29 +68,11 @@ public class EventEdit extends Activity {
 	        // Because it is running in our same process, we should never
 	        // see this happen.
 	        mBoundService = null;
-	        Toast.makeText(Binding.this, R.string.service_disconnected,
+	        Toast.makeText(EventEdit.this, R.string.service_disconnected,
 	                Toast.LENGTH_SHORT).show();
 	    }
 	};
 	
-	void doBindService() {
-	    // Establish a connection with the service.  We use an explicit
-	    // class name because we want a specific service implementation that
-	    // we know will be running in our own process (and thus won't be
-	    // supporting component replacement by other applications).
-	    bindService(new Intent(Binding.this, 
-	            SchedulerService.class), mConnection, Context.BIND_AUTO_CREATE);
-	    mIsBound = true;
-	}
-
-	void doUnbindService() {
-		if (mIsBound) {
-	        // Detach our existing connection.
-	        unbindService(mConnection);
-	        mIsBound = false;
-	    }
-	}
-
 	/*
 	 * public inner class that defines the item selected listener for
 	 * the mMode spinner. When nothing is selected it should default
@@ -173,6 +148,9 @@ public class EventEdit extends Activity {
 		mMode.setAdapter(adapter);
 
 		mMode.setOnItemSelectedListener(new MyItemSelectedListener());
+
+		doBindService();
+		mBoundService.dbConnect(this);
 
 		mConfirm.setOnClickListener(new View.OnClickListener() {
 
@@ -254,7 +232,9 @@ public class EventEdit extends Activity {
 		super.onPause();
 		saveState();
 		Log.d(TAG, "Saved event in DB");
-		scheduleEvent();
+		Log.d(TAG, "mBoundService is " + ((mBoundService == null) ? "Null" : "not Null"));
+		Log.d(TAG, "mRowId is " + ((mRowId == null) ? "Null" : "not Null"));
+		mBoundService.scheduleEvent(mRowId);
 	}
 
 	@Override
@@ -290,46 +270,24 @@ public class EventEdit extends Activity {
 		}
 	}
 
-	private void scheduleEvent() {
-		Calendar cal = Calendar.getInstance();
-		
-		cal.set(Calendar.HOUR_OF_DAY, mRunTime.getCurrentHour());
-		cal.set(Calendar.MINUTE, mRunTime.getCurrentMinute());
-		cal.set(Calendar.SECOND, 0);
-		cal.set(Calendar.MILLISECOND, 0);
-		
-		mWeekDays = new ArrayList<Boolean>();
-
-		mWeekDays.add(mSun.isChecked());
-		mWeekDays.add(mMon.isChecked());
-		mWeekDays.add(mTues.isChecked());
-		mWeekDays.add(mWed.isChecked());
-		mWeekDays.add(mThur.isChecked());
-		mWeekDays.add(mFri.isChecked());
-		mWeekDays.add(mSat.isChecked());
-		
-		int curDay = cal.get(Calendar.DAY_OF_WEEK);
-		curDay--;
-		for (int i = 0; i < 7; i++) {
-			if (mWeekDays.get((curDay + i) % 7)) {
-				cal.add(Calendar.DAY_OF_MONTH, i);
-				break;
-			}
-		}
-		
-		Intent intent = new Intent(getApplicationContext(), SchedulerReciever.class);
-		intent.putExtra(EventsDbAdapter.KEY_ROWID, mRowId);
-		
-		PendingIntent sender = PendingIntent.getBroadcast(
-				this, 123456, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-		
-		AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
-		am.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), sender);
-
-		mDbHelper.updateEventRunTimes(mRowId, 0L, cal.getTimeInMillis());
-				
+	void doBindService() {
+	    // Establish a connection with the service.  We use an explicit
+	    // class name because we want a specific service implementation that
+	    // we know will be running in our own process (and thus won't be
+	    // supporting component replacement by other applications).
+	    bindService(new Intent(EventEdit.this, 
+	            SchedulerService.class), mConnection, Context.BIND_AUTO_CREATE);
+	    mIsBound = true;
 	}
-	
+
+	void doUnbindService() {
+		if (mIsBound) {
+	        // Detach our existing connection.
+	        unbindService(mConnection);
+	        mIsBound = false;
+	    }
+	}
+
 	@Override
 	protected void onDestroy() {
 	    super.onDestroy();

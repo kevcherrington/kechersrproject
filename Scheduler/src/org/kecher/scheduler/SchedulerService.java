@@ -3,6 +3,8 @@ package org.kecher.scheduler;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import org.kecher.scheduler.Scheduler.SchedulerReciever;
+
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -17,10 +19,12 @@ import android.util.Log;
 import android.widget.Toast;
 
 public class SchedulerService extends Service{
+
+	private static final String TAG = "SchedulerService";
 	
 	private ArrayList<Boolean> mWeekDays;
 	private EventsDbAdapter mDbAdapter;
-
+ 
     private NotificationManager mNM;
 
     // Unique Identification Number for the Notification.
@@ -95,7 +99,12 @@ public class SchedulerService extends Service{
         mNM.notify(NOTIFICATION, notification);
     }
     
-	private void rescheduleEvent(Long rowId) {
+    protected void dbConnect(Context context) {
+        mDbAdapter = new EventsDbAdapter(context);
+        mDbAdapter.open();
+    }
+    
+    protected void rescheduleEvent(Long rowId) {
 		Cursor event = mDbAdapter.fetchEvent(rowId);
 
 		Calendar cal = Calendar.getInstance();
@@ -140,7 +149,7 @@ public class SchedulerService extends Service{
 			}
 		}
 
-		Intent intent = new Intent(getApplicationContext(), SchedulerReciever.class);
+		Intent intent = new Intent(getApplicationContext(), Scheduler.class);
 		intent.putExtra(EventsDbAdapter.KEY_ROWID, rowId);
 
 		PendingIntent sender = PendingIntent.getBroadcast(getApplicationContext(), 123456,
@@ -157,4 +166,75 @@ public class SchedulerService extends Service{
 		event.close();
 	}
 
+	protected void scheduleEvent(Long rowId) {
+		ArrayList<Boolean> mWeekDays = new ArrayList<Boolean>();
+		Cursor event = mDbAdapter.fetchEvent(rowId);
+
+		Calendar cal = Calendar.getInstance();
+		
+		cal.set(Calendar.HOUR_OF_DAY, event.getInt(event
+				.getColumnIndexOrThrow(EventsDbAdapter.KEY_RUN_TIME_HOUR)));
+		cal.set(Calendar.MINUTE, event.getInt(event
+				.getColumnIndexOrThrow(EventsDbAdapter.KEY_RUN_TIME_MINUTE)));
+		cal.set(Calendar.SECOND, 0);
+		cal.set(Calendar.MILLISECOND, 0);
+		
+		mWeekDays.add((event.getInt(event
+				.getColumnIndexOrThrow(EventsDbAdapter.KEY_SUN)) == 1) ? true
+						: false);
+		mWeekDays.add((event.getInt(event
+				.getColumnIndexOrThrow(EventsDbAdapter.KEY_MON)) == 1) ? true
+						: false);
+		mWeekDays.add((event.getInt(event
+				.getColumnIndexOrThrow(EventsDbAdapter.KEY_TUES)) == 1) ? true
+						: false);
+		mWeekDays.add((event.getInt(event
+				.getColumnIndexOrThrow(EventsDbAdapter.KEY_WED)) == 1) ? true
+						: false);
+		mWeekDays.add((event.getInt(event
+				.getColumnIndexOrThrow(EventsDbAdapter.KEY_THUR)) == 1) ? true
+						: false);
+		mWeekDays.add((event.getInt(event
+				.getColumnIndexOrThrow(EventsDbAdapter.KEY_FRI)) == 1) ? true
+						: false);
+		mWeekDays.add((event.getInt(event
+				.getColumnIndexOrThrow(EventsDbAdapter.KEY_SAT)) == 1) ? true
+						: false);
+		
+		int curDay = cal.get(Calendar.DAY_OF_WEEK);
+		curDay--;
+		for (int i = 0; i < 7; i++) {
+			if (mWeekDays.get((curDay + i) % 7)) {
+				cal.add(Calendar.DAY_OF_MONTH, i);
+				break;
+			}
+		}
+		
+		Intent intent = new Intent(getApplicationContext(), Scheduler.class);
+		intent.putExtra(EventsDbAdapter.KEY_ROWID, rowId);
+		
+		PendingIntent sender = PendingIntent.getBroadcast(
+				this, 123456, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+		
+		AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+		am.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), sender);
+
+		mDbAdapter.updateEventRunTimes(rowId, 0L, cal.getTimeInMillis());
+				
+		event.close();
+	}
+	
+	protected void removeIntent(Long id) {
+		Context eeContext = new EventEdit().getApplicationContext();
+		Intent intent = new Intent(eeContext, SchedulerReciever.class);
+		intent.putExtra(EventsDbAdapter.KEY_ROWID, id);
+
+		PendingIntent sender = PendingIntent.getBroadcast(eeContext, 123456,
+				intent, PendingIntent.FLAG_CANCEL_CURRENT);
+
+		AlarmManager am = (AlarmManager) eeContext
+				.getSystemService(Context.ALARM_SERVICE);
+		am.cancel(sender);
+		Log.d(TAG, "Removed intent for item " + id);
+	}
 }
