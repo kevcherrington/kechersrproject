@@ -20,7 +20,6 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
-import android.widget.Toast;
 import android.widget.ToggleButton;
 
 public class EventEdit extends Activity {
@@ -41,36 +40,29 @@ public class EventEdit extends Activity {
 	private ToggleButton mVibrate;
 	private Button mConfirm;
 	private EventsDbAdapter mDbHelper;
-	
+
 	private SchedulerService mBoundService;
 	private boolean mIsBound;
-	
+
 	private ServiceConnection mConnection = new ServiceConnection() {
-	    public void onServiceConnected(ComponentName className, IBinder service) {
-	        // This is called when the connection with the service has been
-	        // established
-	        mBoundService = ((SchedulerService.LocalBinder)service).getService();
+		public void onServiceConnected(ComponentName className, IBinder service) {
+			// This is called when the connection with the service has been
+			// established
+			mBoundService = ((SchedulerService.LocalBinder) service)
+					.getService();
+		}
 
-	        // Tell the user about this for our demo.
-	        Toast.makeText(EventEdit.this, R.string.service_connected,
-	                Toast.LENGTH_SHORT).show();
-	    }
-
-	    public void onServiceDisconnected(ComponentName className) {
-	        // This is called when the connection with the service has been
-	        // unexpectedly disconnected -- that is, its process crashed.
-	        // Because it is running in our same process, we should never
-	        // see this happen.
-	        mBoundService = null;
-	        Toast.makeText(EventEdit.this, R.string.service_disconnected,
-	                Toast.LENGTH_SHORT).show();
-	    }
+		public void onServiceDisconnected(ComponentName className) {
+			// This is called when the connection with the service has been
+			// unexpectedly disconnected
+			mBoundService = null;
+		}
 	};
-	
+
 	/*
-	 * public inner class that defines the item selected listener for
-	 * the mMode spinner. When nothing is selected it should default
-	 * to the first item in the ring_modes array.
+	 * public inner class that defines the item selected listener for the mMode
+	 * spinner. When nothing is selected it should default to the first item in
+	 * the ring_modes array.
 	 */
 	public class MyItemSelectedListener implements OnItemSelectedListener {
 		public void onItemSelected(AdapterView<?> parent, View view, int pos,
@@ -78,35 +70,41 @@ public class EventEdit extends Activity {
 			mModeString = mMode.getItemAtPosition(pos).toString();
 		}
 
-		public void onNothingSelected(AdapterView<?> parent) { /* Do nothing*/ }
+		public void onNothingSelected(AdapterView<?> parent) { /* Do nothing */
+		}
 	}
 
 	/*
-	 * Public inner class that defines the seek bar change listener for 
-	 * mVolBar. We do nothing with start and stop tracking touch because
-	 * we will make a direct call to mVolBar when we want to get the value.
-	 * This class is mainly used to update the percentage shown by the 
-	 * volume title.
+	 * Public inner class that defines the seek bar change listener for mVolBar.
+	 * We do nothing with start and stop tracking touch because we will make a
+	 * direct call to mVolBar when we want to get the value. This class is
+	 * mainly used to update the percentage shown by the volume title.
 	 */
 	public class MySeekBarChangeListener implements OnSeekBarChangeListener {
-		public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-			mVolText.setText("Volume: " + (seekBar.getProgress()+1) + "%");
+		public void onProgressChanged(SeekBar seekBar, int progress,
+				boolean fromUser) {
+			mVolText.setText("Volume: " + (seekBar.getProgress() + 1) + "%");
 		}
-		
-		public void onStartTrackingTouch (SeekBar seekBar) { /* do nothing */}
-		
-		public void onStopTrackingTouch (SeekBar seekBar) { /* do nothing */}
+
+		public void onStartTrackingTouch(SeekBar seekBar) { /* do nothing */
+		}
+
+		public void onStopTrackingTouch(SeekBar seekBar) { /* do nothing */
+		}
 	}
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+		// Open DB connection.
 		mDbHelper = new EventsDbAdapter(this);
 		mDbHelper.open();
 
 		setContentView(R.layout.event_edit);
 		setTitle(R.string.edit_event);
 
+		// connect to the components from the view.
 		mTitleText = (EditText) findViewById(R.id.title);
 		mRunTime = (TimePicker) findViewById(R.id.run_time);
 		mSun = (CheckBox) findViewById(R.id.sun);
@@ -123,10 +121,13 @@ public class EventEdit extends Activity {
 		mVolBar.setOnSeekBarChangeListener(new MySeekBarChangeListener());
 		mVibrate = (ToggleButton) findViewById(R.id.vibe);
 		mConfirm = (Button) findViewById(R.id.confirm);
-		
+
+		// if we are resuming from a savedInstanceState retrieve the row Id.
 		mRowId = (savedInstanceState == null) ? null
 				: (Long) savedInstanceState
 						.getSerializable(EventsDbAdapter.KEY_ROWID);
+		
+		// If we are editing an entry get the row Id from the bundle.
 		if (mRowId == null) {
 			Bundle extras = getIntent().getExtras();
 			mRowId = extras != null ? extras.getLong(EventsDbAdapter.KEY_ROWID)
@@ -137,7 +138,9 @@ public class EventEdit extends Activity {
 
 		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
 				this, R.array.ring_modes, android.R.layout.simple_spinner_item);
+		
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
+
 		mMode.setAdapter(adapter);
 
 		mMode.setOnItemSelectedListener(new MyItemSelectedListener());
@@ -156,52 +159,72 @@ public class EventEdit extends Activity {
 
 	private void populateFields() {
 		if (mRowId != null) {
+
 			Cursor event = mDbHelper.fetchEvent(mRowId);
+
 			startManagingCursor(event);
+			
 			mTitleText.setText(event.getString(event
 					.getColumnIndexOrThrow(EventsDbAdapter.KEY_TITLE)));
+			
 			mRunTime.setCurrentHour(event.getInt(event
 					.getColumnIndexOrThrow(EventsDbAdapter.KEY_RUN_TIME_HOUR)));
+			
 			mRunTime.setCurrentMinute(event.getInt(event
 					.getColumnIndexOrThrow(EventsDbAdapter.KEY_RUN_TIME_MINUTE)));
+			
 			mSun.setChecked((event.getInt(event
 					.getColumnIndexOrThrow(EventsDbAdapter.KEY_SUN)) == 1) ? true
 					: false);
+			
 			mMon.setChecked((event.getInt(event
 					.getColumnIndexOrThrow(EventsDbAdapter.KEY_MON)) == 1) ? true
 					: false);
+			
 			mTues.setChecked((event.getInt(event
 					.getColumnIndexOrThrow(EventsDbAdapter.KEY_TUES)) == 1) ? true
 					: false);
+			
 			mWed.setChecked((event.getInt(event
 					.getColumnIndexOrThrow(EventsDbAdapter.KEY_WED)) == 1) ? true
 					: false);
+			
 			mThur.setChecked((event.getInt(event
 					.getColumnIndexOrThrow(EventsDbAdapter.KEY_THUR)) == 1) ? true
 					: false);
+			
 			mFri.setChecked((event.getInt(event
 					.getColumnIndexOrThrow(EventsDbAdapter.KEY_FRI)) == 1) ? true
 					: false);
+			
 			mSat.setChecked((event.getInt(event
 					.getColumnIndexOrThrow(EventsDbAdapter.KEY_SAT)) == 1) ? true
 					: false);
+			
 			mModeString = event.getString(event
 					.getColumnIndexOrThrow(EventsDbAdapter.KEY_MODE));
+			
 			mVolBar.setProgress(event.getInt(event
 					.getColumnIndexOrThrow(EventsDbAdapter.KEY_VOL)));
-			mVolText.setText("Volume: " + (mVolBar.getProgress()+1) + "%");
+			
+			mVolText.setText("Volume: " + (mVolBar.getProgress() + 1) + "%");
+			
 			mVibrate.setChecked((event.getInt(event
 					.getColumnIndexOrThrow(EventsDbAdapter.KEY_VIBRATE)) == 1) ? true
 					: false);
-			
+
 			// initialize the mode spinner.
 			String[] modes = getResources().getStringArray(R.array.ring_modes);
+			
 			if (mModeString.equals(modes[0])) {
 				mMode.setSelection(0);
+			
 			} else if (mModeString.equals(modes[1])) {
 				mMode.setSelection(1);
+			
 			} else if (mModeString.equals(modes[2])) {
 				mMode.setSelection(2);
+			
 			} else {
 				mMode.setSelection(0);
 			}
@@ -211,31 +234,40 @@ public class EventEdit extends Activity {
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
+
+		// push data to the database so it isn't lost.
 		saveState();
 		outState.putSerializable(EventsDbAdapter.KEY_ROWID, mRowId);
 	}
 
 	/*
-	 * On pause is always called when an activity ends. So now would be the time
-	 * to schedule the event if we are going to schedule it.
+	 * On pause is always called when an activity ends.
 	 */
 	@Override
 	protected void onPause() {
 		super.onPause();
 		saveState();
+		
+		// we can use schedule event and it should "update" 
+		// the previous events with the Alarm Manager avoiding a
+		// changed event from happening twice.
 		mBoundService.scheduleEvent(mRowId);
+		doUnbindService();
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 		populateFields();
+		doBindService();
 	}
 
 	private void saveState() {
 		String title = mTitleText.getText().toString();
+		
 		int runHour = mRunTime.getCurrentHour();
 		int runMin = mRunTime.getCurrentMinute();
+		
 		int sun = mSun.isChecked() ? 1 : 0;
 		int mon = mMon.isChecked() ? 1 : 0;
 		int tues = mTues.isChecked() ? 1 : 0;
@@ -243,16 +275,21 @@ public class EventEdit extends Activity {
 		int thur = mThur.isChecked() ? 1 : 0;
 		int fri = mFri.isChecked() ? 1 : 0;
 		int sat = mSat.isChecked() ? 1 : 0;
+		
 		String mode = mModeString;
+		
 		int vol = mVolBar.getProgress();
+		
 		int vibe = mVibrate.isChecked() ? 1 : 0;
 
 		if (mRowId == null) {
 			long id = mDbHelper.createEvent(title, runHour, runMin, sun, mon,
 					tues, wed, thur, fri, sat, mode, vol, vibe, 0L, 0L);
+		
 			if (id > 0) {
 				mRowId = id;
 			}
+			
 		} else {
 			mDbHelper.updateEvent(mRowId, title, runHour, runMin, sun, mon,
 					tues, wed, thur, fri, sat, mode, vol, vibe, 0L, 0L);
@@ -260,23 +297,23 @@ public class EventEdit extends Activity {
 	}
 
 	void doBindService() {
-	    // Establish a connection with the service.
-	    mIsBound = bindService(new Intent(EventEdit.this, 
-	            SchedulerService.class), mConnection, Context.BIND_AUTO_CREATE);
+		// Establish a connection with the service.
+		mIsBound = bindService(new Intent(EventEdit.this,
+				SchedulerService.class), mConnection, Context.BIND_AUTO_CREATE);
 	}
 
 	void doUnbindService() {
 		if (mIsBound) {
-	        // Detach the existing connection.
-	        unbindService(mConnection);
-	        mIsBound = false;
-	    }
+			// Detach the existing connection.
+			unbindService(mConnection);
+			mIsBound = false;
+		}
 	}
 
 	@Override
 	protected void onDestroy() {
-	    super.onDestroy();
-	    doUnbindService();
+		super.onDestroy();
+		mDbHelper.close();
+		doUnbindService();
 	}
-
 }

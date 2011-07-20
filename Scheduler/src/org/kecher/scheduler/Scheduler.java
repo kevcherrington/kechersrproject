@@ -17,7 +17,6 @@ import android.view.View;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
-import android.widget.Toast;
 
 public class Scheduler extends ListActivity {
 	private static final String TAG = "Scheduler";
@@ -39,10 +38,6 @@ public class Scheduler extends ListActivity {
 			// established
 			mBoundService = ((SchedulerService.LocalBinder) service)
 					.getService();
-
-			// Tell the user about this for our demo.
-			Toast.makeText(Scheduler.this, R.string.service_connected,
-					Toast.LENGTH_SHORT).show();
 		}
 
 		public void onServiceDisconnected(ComponentName className) {
@@ -51,8 +46,6 @@ public class Scheduler extends ListActivity {
 			// Because it is running in our same process, we should never
 			// see this happen.
 			mBoundService = null;
-			Toast.makeText(Scheduler.this, R.string.service_disconnected,
-					Toast.LENGTH_SHORT).show();
 		}
 	};
 
@@ -85,24 +78,16 @@ public class Scheduler extends ListActivity {
 		int[] to = new int[] { R.id.text1 };
 
 		// Now create a simple cursor adapter and set it to display
+		// the titles.
 		SimpleCursorAdapter events = new SimpleCursorAdapter(this,
 				R.layout.events_row, eventsCursor, from, to);
 		setListAdapter(events);
 	}
 
 	void doBindService() {
-		// Establish a connection with the service. We use an explicit
-		// class name because we want a specific service implementation that
-		// we know will be running in our own process (and thus won't be
-		// supporting component replacement by other applications).
-		if (bindService(new Intent(Scheduler.this, SchedulerService.class),
-				mConnection, Context.BIND_AUTO_CREATE)) {
-			mIsBound = true;
-		    Log.d(TAG, "mIsBound == true!!!!!!!!!!");
-	    } else {
-	    	mIsBound = false;
-		    Log.d(TAG, "mIsBound == false!!!!!!!!!!");
-		}
+		// Establish a connection with the service.
+		mIsBound = bindService(new Intent(Scheduler.this,
+				SchedulerService.class), mConnection, Context.BIND_AUTO_CREATE);
 	}
 
 	void doUnbindService() {
@@ -173,7 +158,9 @@ public class Scheduler extends ListActivity {
 	}
 	
 	@Override
-	protected void onPause() {
+	protected void onDestroy() {
+		super.onDestroy();
 		mDbAdapter.close();
+		doUnbindService();
 	}
 }
