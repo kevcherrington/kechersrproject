@@ -1,13 +1,11 @@
 package org.kecher.scheduler;
 
 import android.app.ListActivity;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
-import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -38,11 +36,7 @@ public class Scheduler extends ListActivity {
 	private ServiceConnection mConnection = new ServiceConnection() {
 		public void onServiceConnected(ComponentName className, IBinder service) {
 			// This is called when the connection with the service has been
-			// established, giving us the service object we can use to
-			// interact with the service. Because we have bound to a
-			// explicit
-			// service that we know is running in our own process, we can
-			// cast its IBinder to a concrete class and directly access it.
+			// established
 			mBoundService = ((SchedulerService.LocalBinder) service)
 					.getService();
 
@@ -76,15 +70,6 @@ public class Scheduler extends ListActivity {
 		Log.d(TAG, "Starting Scheduler Service.");
 		this.startService(intent);
 		doBindService();
-		if (mIsBound) {
-			Log.d(TAG, "bound to service connecting to Db");
-			if (mBoundService == null) {
-				Log.d(TAG, "mBoundService is null.");
-			}
-			mBoundService.dbConnect(getApplicationContext());
-		} else {
-			Log.d(TAG, "Not Bound to Service");
-		}
 	}
 
 	private void fillData() {
@@ -110,9 +95,14 @@ public class Scheduler extends ListActivity {
 		// class name because we want a specific service implementation that
 		// we know will be running in our own process (and thus won't be
 		// supporting component replacement by other applications).
-		bindService(new Intent(Scheduler.this, SchedulerService.class),
-				mConnection, Context.BIND_AUTO_CREATE);
-		mIsBound = true;
+		if (bindService(new Intent(Scheduler.this, SchedulerService.class),
+				mConnection, Context.BIND_AUTO_CREATE)) {
+			mIsBound = true;
+		    Log.d(TAG, "mIsBound == true!!!!!!!!!!");
+	    } else {
+	    	mIsBound = false;
+		    Log.d(TAG, "mIsBound == false!!!!!!!!!!");
+		}
 	}
 
 	void doUnbindService() {
@@ -182,105 +172,8 @@ public class Scheduler extends ListActivity {
 		fillData();
 	}
 	
-	protected void adjustSoundSettings(Long rowId) {
-		try {
-			mDbAdapter = new EventsDbAdapter(this);
-			mDbAdapter.open();
-
-			AudioManager adoMngr = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-
-
-			Cursor event = mDbAdapter.fetchEvent(rowId);
-			String mode = event.getString(event
-					.getColumnIndexOrThrow(EventsDbAdapter.KEY_MODE));
-			int vol = event.getInt(event
-					.getColumnIndexOrThrow(EventsDbAdapter.KEY_VOL));
-			boolean vibe = (event
-					.getInt(event
-							.getColumnIndexOrThrow(EventsDbAdapter.KEY_VIBRATE)) == 1) ? true
-					: false;
-			String[] modes = getResources().getStringArray(
-					R.array.ring_modes);
-
-			if (mode.equals(modes[2])) { // Silent
-				Log.d(TAG, "Changed to " + mode + " " + vol + " "
-						+ vibe);
-				adoMngr.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-				adoMngr.setVibrateSetting(
-						AudioManager.VIBRATE_TYPE_RINGER,
-						AudioManager.VIBRATE_SETTING_OFF);
-				adoMngr.setVibrateSetting(
-						AudioManager.VIBRATE_TYPE_NOTIFICATION,
-						AudioManager.VIBRATE_SETTING_OFF);
-				// adoMngr.setStreamVolume(AudioManager.STREAM_RING, 0,
-				// AudioManager.FLAG_SHOW_UI);
-				// turn off Ringer and Vibrate
-			} else if (mode.equals(modes[1])) { // Vibrate
-				Log.d(TAG, "Changed to " + mode + " " + vol + " "
-						+ vibe);
-				adoMngr.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
-
-				// Set phone to vibrate and turn off ringer.
-			} else if (mode.equals(modes[0])) { // Normal
-				Log.d(TAG, "Changed to " + mode + " " + vol + " "
-						+ vibe);
-				adoMngr.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
-
-				int volLvl = adoMngr
-						.getStreamMaxVolume(AudioManager.STREAM_RING);
-				adoMngr.setStreamVolume(AudioManager.STREAM_RING,
-						((int) (volLvl * (vol * .01))),
-						AudioManager.FLAG_SHOW_UI);
-
-				int noteLvl = adoMngr
-						.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION);
-				adoMngr.setStreamVolume(
-						AudioManager.STREAM_NOTIFICATION,
-						((int) (noteLvl * (vol * .01))),
-						AudioManager.FLAG_SHOW_UI);
-
-				if (vibe) {
-					adoMngr.setVibrateSetting(
-							AudioManager.VIBRATE_TYPE_RINGER,
-							AudioManager.VIBRATE_SETTING_ON);
-				} else {
-					adoMngr.setVibrateSetting(
-							AudioManager.VIBRATE_TYPE_RINGER,
-							AudioManager.VIBRATE_SETTING_OFF);
-				}
-				// Set the Volume and vibrate indicated.
-			} else {
-				throw new Exception(
-						"Ring Scheduler: invalid mode provided");
-			}
-
-			mBoundService.rescheduleEvent(rowId);
-			event.close();
-		} catch (Exception e) {
-			Toast.makeText(this, "Ring Scheduler: An error occured",
-					Toast.LENGTH_SHORT).show();
-			e.printStackTrace();
-		} finally { // Make sure to release resources
-			Log.d(TAG, "closing DB");
-			mDbAdapter.close();
-			Log.d(TAG, "DB has been CLOSED.");
-		}
-	}
-
-	public class SchedulerReciever extends BroadcastReceiver {
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			if ((intent.getAction() != null)
-					&& (intent.getAction()
-							.equals("android.intent.action.BOOT_COMPLETED"))) {
-				Intent newIntent = new Intent(context, SchedulerService.class);
-				newIntent.putExtra("message", "The Service is Running");
-				Log.d(TAG, "Starting Scheduler Service.");
-				Scheduler.this.startService(newIntent);
-			} else {
-				Bundle bundle = intent.getExtras();
-				adjustSoundSettings(bundle.getLong(EventsDbAdapter.KEY_ROWID));
-			}
-		}
+	@Override
+	protected void onPause() {
+		mDbAdapter.close();
 	}
 }
