@@ -8,7 +8,6 @@ import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -25,8 +24,6 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 public class EventEdit extends Activity {
-	private static final String TAG = "EventEdit";
-	
 	private Long mRowId;
 	private EditText mTitleText;
 	private TimePicker mRunTime;
@@ -51,10 +48,7 @@ public class EventEdit extends Activity {
 	private ServiceConnection mConnection = new ServiceConnection() {
 	    public void onServiceConnected(ComponentName className, IBinder service) {
 	        // This is called when the connection with the service has been
-	        // established, giving us the service object we can use to
-	        // interact with the service.  Because we have bound to a explicit
-	        // service that we know is running in our own process, we can
-	        // cast its IBinder to a concrete class and directly access it.
+	        // established
 	        mBoundService = ((SchedulerService.LocalBinder)service).getService();
 
 	        // Tell the user about this for our demo.
@@ -97,7 +91,6 @@ public class EventEdit extends Activity {
 	public class MySeekBarChangeListener implements OnSeekBarChangeListener {
 		public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 			mVolText.setText("Volume: " + (seekBar.getProgress()+1) + "%");
-			Log.d("test", "Volume changed to " + (progress+1));
 		}
 		
 		public void onStartTrackingTouch (SeekBar seekBar) { /* do nothing */}
@@ -150,7 +143,6 @@ public class EventEdit extends Activity {
 		mMode.setOnItemSelectedListener(new MyItemSelectedListener());
 
 		doBindService();
-		mBoundService.dbConnect(this);
 
 		mConfirm.setOnClickListener(new View.OnClickListener() {
 
@@ -231,9 +223,6 @@ public class EventEdit extends Activity {
 	protected void onPause() {
 		super.onPause();
 		saveState();
-		Log.d(TAG, "Saved event in DB");
-		Log.d(TAG, "mBoundService is " + ((mBoundService == null) ? "Null" : "not Null"));
-		Log.d(TAG, "mRowId is " + ((mRowId == null) ? "Null" : "not Null"));
 		mBoundService.scheduleEvent(mRowId);
 	}
 
@@ -271,18 +260,14 @@ public class EventEdit extends Activity {
 	}
 
 	void doBindService() {
-	    // Establish a connection with the service.  We use an explicit
-	    // class name because we want a specific service implementation that
-	    // we know will be running in our own process (and thus won't be
-	    // supporting component replacement by other applications).
-	    bindService(new Intent(EventEdit.this, 
+	    // Establish a connection with the service.
+	    mIsBound = bindService(new Intent(EventEdit.this, 
 	            SchedulerService.class), mConnection, Context.BIND_AUTO_CREATE);
-	    mIsBound = true;
 	}
 
 	void doUnbindService() {
 		if (mIsBound) {
-	        // Detach our existing connection.
+	        // Detach the existing connection.
 	        unbindService(mConnection);
 	        mIsBound = false;
 	    }
