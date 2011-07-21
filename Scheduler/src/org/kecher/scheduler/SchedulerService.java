@@ -63,15 +63,15 @@ public class SchedulerService extends Service {
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		Log.d(TAG, "Received start id " + startId + " intent: " + intent);
+		Log.v(TAG, "Received start id " + startId + " intent: " + intent);
 		Bundle bundle = intent.getExtras();
-		Log.d(TAG, "Keys " + bundle.keySet());
+		Log.v(TAG, "Keys " + bundle.keySet());
 
 		if (bundle.containsKey(ADJUST_SOUND)) {
 			Log.d(TAG, "onStartCommand() KEY_ROWID " + bundle.getLong("_id"));
 			adjustSoundSettings(bundle.getLong(EventsDbAdapter.KEY_ROWID));
 		} else if (bundle.containsKey(PHONE_BOOT)) {
-			Log.d(TAG, "Fresh boot schedule all events.");
+			Log.i(TAG, "Fresh boot schedule all events.");
 			scheduleAllEvents();
 		}
 
@@ -232,8 +232,8 @@ public class SchedulerService extends Service {
 				.getTimeInMillis());
 
 		// Log this for convenience so we know when it is scheduled to run next.
-		SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy");
-		Log.d(TAG, "Reschedule: Next Runtime - " + sdf.format(cal.getTime()));
+		SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy hh:mm aaa");
+		Log.i(TAG, "Reschedule: Next Runtime - " + sdf.format(cal.getTime()));
 
 		// Close connections to the DB to avoid leaks.
 		event.close();
@@ -312,8 +312,8 @@ public class SchedulerService extends Service {
 		mDbAdapter.updateEventRunTimes(rowId, 0L, cal.getTimeInMillis());
 
 		// present for convenience.
-		SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy");
-		Log.d(TAG, "Schedule: Next Run Time - " + sdf.format(cal.getTime()));
+		SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy hh:mm aaa");
+		Log.i(TAG, "Schedule: Next Run Time - " + sdf.format(cal.getTime()));
 
 		// Close connections to the DB to avoid leaks.
 		event.close();
@@ -337,7 +337,7 @@ public class SchedulerService extends Service {
 		AlarmManager am = (AlarmManager) getApplicationContext()
 				.getSystemService(Context.ALARM_SERVICE);
 		am.cancel(sender);
-		Log.d(TAG, "Removed intent for item " + id);
+		Log.i(TAG, "Removed intent for item " + id);
 	}
 
 	protected void adjustSoundSettings(Long rowId) {
@@ -351,7 +351,7 @@ public class SchedulerService extends Service {
 		Cursor event;
 		
 		try {
-			Log.d(TAG, "Event Row Id " + rowId);
+			Log.v(TAG, "Adj Sound Settings: Event Row Id " + rowId);
 
 			AudioManager adoMngr = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
@@ -370,7 +370,7 @@ public class SchedulerService extends Service {
 			String[] modes = getResources().getStringArray(R.array.ring_modes);
 
 			if (mode.equals(modes[2])) { // Silent
-				Log.d(TAG, "Changed to " + mode);
+				Log.i(TAG, "Changed to " + mode);
 
 				adoMngr.setRingerMode(AudioManager.RINGER_MODE_SILENT);
 
@@ -382,12 +382,12 @@ public class SchedulerService extends Service {
 						AudioManager.VIBRATE_SETTING_OFF);
 
 			} else if (mode.equals(modes[1])) { // Vibrate
-				Log.d(TAG, "Changed to " + mode);
+				Log.i(TAG, "Changed to " + mode);
 
 				adoMngr.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
 
 			} else if (mode.equals(modes[0])) { // Normal
-				Log.d(TAG, "Changed to " + mode + " " + vol + " " + vibe);
+				Log.i(TAG, "Changed to " + mode + " " + vol + " " + vibe);
 
 				adoMngr.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
 
@@ -433,12 +433,8 @@ public class SchedulerService extends Service {
 			e.printStackTrace();
 
 		} finally { // Make sure to release resources
-			Log.d(TAG, "closing DB");
-
 			mDbAdapter.close();
 			mDbIsOpen = false;
-
-			Log.d(TAG, "DB has been CLOSED.");
 		}
 	}
 }
