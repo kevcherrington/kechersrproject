@@ -156,7 +156,7 @@ public class EventsDbAdapter {
 		if (mCursor != null) {
 			mCursor.moveToFirst();
 		}
-		Log.d(TAG, "Cursor size is " + mCursor.getCount() + " Requested Row = "
+		Log.v(TAG, "Cursor size is " + mCursor.getCount() + " Requested Row = "
 				+ rowId);
 		return mCursor;
 
